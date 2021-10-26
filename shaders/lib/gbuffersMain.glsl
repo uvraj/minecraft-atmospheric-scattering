@@ -85,11 +85,11 @@ in vec4 glcolor;
 
 /* DRAWBUFFERS: 0 */
 //layout(location = 0) out vec4 terrainColor;
-//layout fucks the transparency / alpha of terrain here for some reason
+//layout fucks the transparency / alpha of terrain here for some reason (1.17)
 
 void main() {
-	vec4 color = texture(texture, texcoord) * glcolor;
-	color *= texture(lightmap, lightMapCoord);
+	vec4 color = texture2D(texture, texcoord) * glcolor;
+	color *= texture2D(lightmap, lightMapCoord);
 
 
     gl_FragData[0] = color; 
@@ -132,7 +132,7 @@ in vec4 glcolor;
 //layout (location = N) fucks the cloud transparency here for some reason...?
 
 void main() {
-	vec4 color = texture(texture, texcoord) * glcolor;
+	vec4 color = texture2D(texture, texcoord) * glcolor;
 	gl_FragData[0] = color;
     //cloudColor = color;
 }
