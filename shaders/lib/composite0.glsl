@@ -30,6 +30,8 @@ void main() {
 
     vec3 wDir = mat3(gbufferModelViewInverse) * viewPos;
 
+    //atmosphere taken from https://github.com/wwwtyro/glsl-atmosphere
+
     vec3 skyColor = atmosphere(
         wDir,                           // normalized ray direction
         vec3(0,6372e3,0),               // ray origin
