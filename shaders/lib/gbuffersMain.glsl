@@ -1,3 +1,5 @@
+//GBUFFERS_MAIN
+
 /* gbuffers_skybasic */
 
 #if defined skybasic
@@ -5,13 +7,53 @@
 
 //skybasic fragment
 
+uniform sampler2D depthtex0;
+
+uniform mat4 gbufferModelViewInverse;
+uniform mat4 gbufferProjectionInverse;
+
+uniform vec3 sunPosition;
+
+uniform vec2 viewDimensions;
+
 in vec4 starData;
 
+#include "/lib/shaderConstants.glsl"
+#include "/lib/settingsLib/atmosphereConstants.glsl"
+#include "/lib/utilities.glsl"
+#include "/lib/sky.glsl"
+
 /* DRAWBUFFERS: 0 */
-layout (location = 0) out vec4 skyColor;
+layout (location = 0) out vec4 outColor;
 
 void main() {
-	skyColor = starData.a > 0.5 ? vec4(starData.rgb, 1.0) : vec4(0.0, 0.0, 0.0, 1.0);
+	vec2 texcoord 	= gl_FragCoord.xy / viewDimensions.xy;
+	float depth 	= texture2D(depthtex0, texcoord.xy).x;
+	vec3 wSunPos	= mat3(gbufferModelViewInverse) * sunPosition;
+	vec3 screenPos	= vec3(texcoord, depth);
+	vec3 viewPos	= calculateViewPosition(screenPos, gbufferProjectionInverse);
+
+	vec3 wDir 		= mat3(gbufferModelViewInverse) * viewPos;
+	
+	//atmosphere from https://github.com/wwwtyro/glsl-atmosphere
+
+	vec3 skyColor 	= atmosphere(
+        wDir,                           // normalized ray direction
+        vec3(0,6372e3,0),               // ray origin
+        wSunPos,                   // position of the sun
+        sunIntensity,                           // intensity of the sun
+        6371e3,                         // radius of the planet in meters
+        6471e3,                         // radius of the atmosphere in meters
+        vec3(5.5e-6, 13.0e-6, 22.4e-6), // Rayleigh scattering coefficient
+        21e-6,                          // Mie scattering coefficient
+        8e3,                            // Rayleigh scale height
+        1.2e3,                          // Mie scale height
+        0.758                           // Mie preferred scattering direction
+    );
+
+    skyColor 		= 1.0 - exp(-1.0 * skyColor);
+
+	outColor 		= starData.a > 0.5 ? vec4(starData.rgb, 1.0) : vec4(skyColor, 1.0);
 }
 
 #endif 
@@ -36,7 +78,7 @@ void main() {
 #if defined skytextured
 #if defined fsh
 
-//skytexted fragment
+//skytextured fragment
 
 uniform sampler2D texture;
 
@@ -54,7 +96,7 @@ void main() {
 
 #if defined vsh
 
-//skytextured fragment
+//skytextured vertex
 
 out vec2 texcoord;
 out vec4 glcolor;
@@ -86,6 +128,7 @@ in vec4 glcolor;
 /* DRAWBUFFERS: 0 */
 //layout(location = 0) out vec4 terrainColor;
 //layout fucks the transparency / alpha of terrain here for some reason (1.17)
+//another note: OF 1.16 yells at me if I use texture() here. (or in any gbuffer programs?)
 
 void main() {
 	vec4 color = texture2D(texture, texcoord) * glcolor;
