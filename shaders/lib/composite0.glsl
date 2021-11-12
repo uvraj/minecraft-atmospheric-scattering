@@ -1,18 +1,15 @@
-//COMPOSITE0 
-#if defined fsh
+#include "/lib/syntaxLib.glsl"
 
-//Fragment shader
+#if defined fsh
 
 uniform sampler2D colortex0;
 
 in vec2 texcoord;
 
-#include "/lib/utilities.glsl"
-
 /* DRAWBUFFERS: 0 */
 layout (location = 0) out vec4 outColor;
 
-void main() {
+void fragmentMain() {
     outColor = texture(colortex0, texcoord.xy);
 } 
 
@@ -21,14 +18,11 @@ void main() {
 
 #if defined vsh
 
-//Vertex shader
-
 out vec2 texcoord;
 
-void main() {
+void vertexMain() {
+    texcoord = gl_Vertex.xy;
 	gl_Position = ftransform();
-	texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 }
-
 
 #endif
